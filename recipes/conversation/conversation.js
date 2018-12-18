@@ -87,60 +87,6 @@ tj.listen(function(msg) {
                             tj.raiseArm();
                             spoken = true;
                             break;
-                        case "wave":
-                            tj.speak(response.description);
-                            tj.wave();
-                            spoken = true;
-                            break;
-                        case "greeting":
-                            tj.speak(response.description);
-                            tj.wave();
-                            spoken = true;
-                            break;
-                        case "shine":
-                            var misunderstood = false;
-                            if (response.object.entities != undefined) {
-                                var entity = response.object.entities[0];
-                                if (entity != undefined && entity.value != undefined) {
-                                    var color = entity.value;
-                                    tj.speak(response.description);
-                                    tj.shine(color);
-                                    spoken = true;
-                                } else {
-                                    misunderstood = true;
-                                }
-                            } else {
-                                misunderstood = true;
-                            }
-                            
-                            if (misunderstood == true) {
-                                tj.speak("I'm sorry, I didn't understand your color");
-                                spoken = true;
-                            }
-                            break;
-                        case "see":
-                            if (config.hasCamera == false) {
-                                tj.speak("I'm sorry, I don't have a camera so I can't see anything");
-                                spoken = true;
-                            } else {
-                                tj.speak(response.description);
-                                tj.see().then(function(objects) {
-                                    if (objects.length == 0) {
-                                        tj.speak("I'm not sure I see anything");
-                                    } else if (objects.length == 1) {
-                                        var object = objects[0].class;
-                                        tj.speak("I see " + object);
-                                    } else if (objects.length == 2) {
-                                        var objects = objects[0].class + " and " + objects[1].class;
-                                        tj.speak("I'm looking at " + objects);
-                                    } else {
-                                        var objects = objects[0].class + ", " + objects[1].class + ", and " + objects[2].class + ", and a few other things too";
-                                        tj.speak("I'm looking at " + objects);
-                                    }
-                                });
-                                spoken = true;
-                            }
-                            break;
                         }
                     }
                 }
@@ -148,7 +94,50 @@ tj.listen(function(msg) {
                 // if we didn't speak a response yet, speak it now
                 if (spoken == false) {
                     tj.speak(response.description);
+                    getAnalisys(utterance);
                 }
         });
     }
 });
+
+
+
+function getAnalisys(text) {
+    tj.analyzeTone(text).then(function(tone) {
+        tone.document_tone.tone_categories.forEach(function(category) {
+            if (category.category_id == "emotion_tone") {
+                // find the emotion with the highest confidence
+                var max = category.tones.reduce(function(a, b) {
+                    return (a.score > b.score) ? a : b;
+                });
+                 // make sure we really are confident
+                if (max.score >= CONFIDENCE_THRESHOLD) {
+                    reactForEmotion(max.tone_id);
+                }
+            }
+        });
+    });
+}
+
+function reactForEmotion(emotion) {
+    console.log("Current emotion around " + SENTIMENT_KEYWORD + " is " + emotion);
+    switch (emotion) {
+    case 'anger':
+        console.log("Vejo que você está bravo");
+        break;
+    case 'joy':
+        console.log("Vejo que você está feliz")
+        break;
+    case 'fear':
+        console.log("Vejo que você está com medo");
+        break;
+    case 'disgust':
+        console.log("Vejo que você está com desgosto")
+        break;
+    case 'sadness':
+        console.log("Vejo que você está triste")
+        break;
+    default:
+        break;
+    }
+}
