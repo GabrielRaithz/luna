@@ -67,7 +67,8 @@ tj.listen(function(msg) {
         var turn = msg.toLowerCase().replace(tj.configuration.robot.name.toLowerCase(), "");
         
         var utterance = msg.toLowerCase();
-        
+        getAnalisys(turn);
+
         // send to the assistant service
         tj.converse(WORKSPACEID, utterance, function(response) {
             var spoken = false;
@@ -94,7 +95,7 @@ tj.listen(function(msg) {
                 // if we didn't speak a response yet, speak it now
                 if (spoken == false) {
                     tj.speak(response.description);
-                    getAnalisys(utterance);
+                    
                 }
         });
     }
@@ -104,18 +105,7 @@ tj.listen(function(msg) {
 
 function getAnalisys(text) {
     tj.analyzeTone(text).then(function(tone) {
-        tone.document_tone.tone_categories.forEach(function(category) {
-            if (category.category_id == "emotion_tone") {
-                // find the emotion with the highest confidence
-                var max = category.tones.reduce(function(a, b) {
-                    return (a.score > b.score) ? a : b;
-                });
-                 // make sure we really are confident
-                if (max.score >= CONFIDENCE_THRESHOLD) {
-                    reactForEmotion(max.tone_id);
-                }
-            }
-        });
+        console.log(JSON.stringify(tone));
     });
 }
 
