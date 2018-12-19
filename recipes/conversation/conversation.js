@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-
+var LanguageTranslatorV3 = require('watson-developer-cloud/language-translator/v3');
 var TJBot = require('tjbot');
 var config = require('./config');
 
@@ -51,6 +51,13 @@ var tjConfig = {
     }
 };
 
+var translator = new LanguageTranslatorV3({
+  //apikey: 'g7KToaBfBdIAxv-gmyUsEXL_axNOYtKnZ0up-CD65V3N',
+  version: '2018-05-01',
+  iam_apikey: "296t2ueiKNrMSu4-SO800TKqEhQWow1II6jaKm-UQpiX",
+  url: "https://gateway.watsonplatform.net/language-translator/api"
+});
+
 // instantiate our TJBot!
 var tj = new TJBot(hardware, tjConfig, credentials);
 
@@ -65,9 +72,20 @@ tj.listen(function(msg) {
     if (msg.toLowerCase().startsWith(tj.configuration.robot.name.toLowerCase())) {
         // remove our name from the message
         var turn = msg.toLowerCase().replace(tj.configuration.robot.name.toLowerCase(), "");
-        
+        console.log('text in: ' + turn);
+	var parameters = {
+  		text: turn,
+  		model_id: 'pt-en'
+	};
+        translator.translate(parameters, function(err, models) {
+            if (err) return console.log(err);
+            else {	
+                var traducao = models.translations[0].translation;
+		console.log(traducao);
+		getAnalisys(traducao)
+	    };
+        });
         var utterance = msg.toLowerCase();
-        getAnalisys(turn);
 
         // send to the assistant service
         tj.converse(WORKSPACEID, utterance, function(response) {
@@ -100,8 +118,6 @@ tj.listen(function(msg) {
         });
     }
 });
-
-
 
 function getAnalisys(text) {
     tj.analyzeTone(text).then(function(tone) {
