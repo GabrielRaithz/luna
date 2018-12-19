@@ -17,6 +17,7 @@
 var LanguageTranslatorV3 = require('watson-developer-cloud/language-translator/v3');
 var TJBot = require('tjbot');
 var config = require('./config');
+var nome = '';
 
 // obtain our credentials from config.js
 var credentials = config.credentials;
@@ -81,9 +82,9 @@ tj.listen(function(msg) {
             if (err) return console.log(err);
             else {	
                 var traducao = models.translations[0].translation;
-		console.log(traducao);
-		getAnalisys(traducao)
-	    };
+		        console.log(traducao);
+		        getAnalisys(traducao)
+	        };
         });
         var utterance = msg.toLowerCase();
 
@@ -94,30 +95,40 @@ tj.listen(function(msg) {
             // check if an intent to control the bot was found
             if (response.object.intents != undefined) {
                 var intent = response.object.intents[0];
+		var sayName = false;
+		console.log('Intent: ' + intent.intent);
                 if (intent != undefined && intent.intent != undefined) {
                     switch (intent.intent) {
-                        case "lower-arm":
-                            tj.speak(response.description);
-                            tj.lowerArm();
-                            spoken = true;
+                        case "nome":
+                            var n = turn.split(' ');
+    			    nome = n[n.length - 2];
+			    console.log('nome: ' + nome);
+			    console.log('turn: ' + turn);
                             break;
-                        case "raise-arm":
-                            tj.speak(response.description);
-                            tj.raiseArm();
-                            spoken = true;
+                        case "cumprimentos":
+                            sayName = true;
                             break;
+			case "despedida":
+                            sayName = true;
+			    break;
                         }
                     }
                 }
             
                 // if we didn't speak a response yet, speak it now
-                if (spoken == false) {
+                if (sayName == false) {
                     tj.speak(response.description);
-                    
-                }
+                }else{
+	            tj.speak(response.description + ' ' + nome);
+		}
         });
     }
 });
+
+function getNome(texto){
+    var n = texto.split(" ");
+    nome = n[n.length - 1];
+}
 
 function getAnalisys(text) {
     tj.analyzeTone(text).then(function(tone) {
@@ -146,4 +157,4 @@ function reactForEmotion(emotion) {
     default:
         break;
     }
-}
+} 
