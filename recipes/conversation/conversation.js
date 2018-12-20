@@ -91,6 +91,10 @@
             robotName = 'aluna';
         } else if (msgMin.startsWith('alunas')) {
             robotName = 'alunas';
+        } else if (msgMin.startsWith('bruna')) {
+            robotName = 'bruna';
+        } else if (msgMin.startsWith('nona')) {
+            robotName = 'nona';
         }
         if (robotName != '') {
             // remove our name from the message
