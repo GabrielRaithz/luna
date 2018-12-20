@@ -14,10 +14,9 @@
      * limitations under the License.
      */
 
-    var LanguageTranslatorV3 = require('watson-developer-cloud/language-translator/v3');
+
     var TJBot = require('tjbot');
     var config = require('./config');
-    var nome = '';
 
     // obtain our credentials from config.js
     var credentials = config.credentials;
@@ -52,13 +51,6 @@
         }
     };
 
-    var translator = new LanguageTranslatorV3({
-    //apikey: 'g7KToaBfBdIAxv-gmyUsEXL_axNOYtKnZ0up-CD65V3N',
-    version: '2018-05-01',
-    iam_apikey: "296t2ueiKNrMSu4-SO800TKqEhQWow1II6jaKm-UQpiX",
-    url: "https://gateway.watsonplatform.net/language-translator/api"
-    });
-
     // instantiate our TJBot!
     var tj = new TJBot(hardware, tjConfig, credentials);
 
@@ -73,21 +65,9 @@
         if (msg.toLowerCase().startsWith(tj.configuration.robot.name.toLowerCase())) {
             // remove our name from the message
             var turn = msg.toLowerCase().replace(tj.configuration.robot.name.toLowerCase(), "");
-            console.log('text in: ' + turn);
-        var parameters = {
-            text: turn,
-            model_id: 'pt-en'
-        };
-            translator.translate(parameters, function(err, models) {
-                if (err) return console.log(err);
-                else {	
-                    var traducao = models.translations[0].translation;
-                    console.log(traducao);
-                    getAnalisys(traducao)
-                };
-            });
+            
             var utterance = msg.toLowerCase();
-
+            
             // send to the assistant service
             tj.converse(WORKSPACEID, utterance, function(response) {
                 var spoken = false;
@@ -95,44 +75,47 @@
                 // check if an intent to control the bot was found
                 if (response.object.intents != undefined) {
                     var intent = response.object.intents[0];
-            var sayName = false;
-            console.log('Intent: ' + intent.intent);
                     if (intent != undefined && intent.intent != undefined) {
                         switch (intent.intent) {
-                            case "nome":
-                                var n = turn.split(' ');
-                        nome = n[n.length - 2];
-                    console.log('nome: ' + nome);
-                    console.log('turn: ' + turn);
+                            case "lower-arm":
+                                tj.speak(response.description);
+                                tj.lowerArm();
+                                spoken = true;
                                 break;
-                            case "cumprimentos":
-                                sayName = true;
+                            case "raise-arm":
+                                tj.speak(response.description);
+                                tj.raiseArm();
+                                spoken = true;
                                 break;
-                case "despedida":
-                                sayName = true;
-                    break;
                             }
                         }
                     }
-                                            
+                
                     // if we didn't speak a response yet, speak it now
-                    if (sayName == false) {
+                    if (spoken == false) {
                         tj.speak(response.description);
-                    }else{
-                    tj.speak(response.description + ' ' + nome);
-            }
+                        getAnalisys(utterance);
+                    }
             });
         }
     });
 
-    function getNome(texto){
-        var n = texto.split(" ");
-        nome = n[n.length - 1];
-    }
+
 
     function getAnalisys(text) {
         tj.analyzeTone(text).then(function(tone) {
-            console.log(JSON.stringify(tone));
+            tone.document_tone.tone_categories.forEach(function(category) {
+                if (category.category_id == "emotion_tone") {
+                    // find the emotion with the highest confidence
+                    var max = category.tones.reduce(function(a, b) {
+                        return (a.score > b.score) ? a : b;
+                    });
+                    // make sure we really are confident
+                    if (max.score >= CONFIDENCE_THRESHOLD) {
+                        reactForEmotion(max.tone_id);
+                    }
+                }
+            });
         });
     }
 
@@ -157,4 +140,4 @@
         default:
             break;
         }
-    } 
+    }
