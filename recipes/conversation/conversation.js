@@ -70,10 +70,31 @@
     // listen for utterances with our attentionWord and send the result to
     // the Assistant service
     tj.listen(function(msg) {
+        var robotName = '';
+        var msgMin = msg.toLowerCase();
         // check to see if they are talking to TJBot
-        if (msg.toLowerCase().startsWith(tj.configuration.robot.name.toLowerCase())) {
+        if (msgMin.startsWith(tj.configuration.robot.name.toLowerCase())) {
+            robotName = tj.configuration.robot.name.toLowerCase();
+        } else if (msgMin.startsWith('lona')) {
+            robotName = 'lona';
+        } else if (msgMin.startsWith('lonas')) {
+            robotName = 'lonas';
+        } else if (msgMin.startsWith('coluna')) {
+            robotName = 'coluna';
+        } else if (msgMin.startsWith('com lona')) {
+            robotName = 'com lona';
+        } else if (msgMin.startsWith('com lonas')) {
+            robotName = 'com lonas';
+        } else if (msgMin.startsWith('dona')) {
+            robotName = 'dona';
+        } else if (msgMin.startsWith('aluna')) {
+            robotName = 'aluna';
+        } else if (msgMin.startsWith('alunas')) {
+            robotName = 'alunas';
+        }
+        if (robotName != '') {
             // remove our name from the message
-            var turn = msg.toLowerCase().replace(tj.configuration.robot.name.toLowerCase(), "");
+            var turn = msgMin.replace(robotName, '');
             console.log('text in: ' + turn);
         var parameters = {
             text: turn,
