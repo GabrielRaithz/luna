@@ -18,6 +18,7 @@
     var TJBot = require('tjbot');
     var config = require('./config');
     var nome = '';
+    var musica = '';
 
     // obtain our credentials from config.js
     var credentials = config.credentials;
@@ -91,6 +92,7 @@
             // send to the assistant service
             tj.converse(WORKSPACEID, utterance, function(response) {
                 var spoken = false;
+                var triste = false;
                 
                 // check if an intent to control the bot was found
                 if (response.object.intents != undefined) {
@@ -104,6 +106,15 @@
                         nome = n[n.length - 2];
                     console.log('nome: ' + nome);
                     console.log('turn: ' + turn);
+                                break;
+                            case "musica":
+                                var m = turn.split(' ');
+                                musica = m[m.length - 2];
+                                console.log('musica ' + musica);
+                                console.log('turn ' + turn);
+                                break;
+                            case "malEstar":
+                                triste = true;
                                 break;
                             case "cumprimentos":
                                 sayName = true;
@@ -121,6 +132,9 @@
                     }else{
                     tj.speak(response.description + ' ' + nome);
             }
+                    if (triste && musica) {
+                        tj.speak('Que tal ouvir um pouco de ' + musica + ' para se alegrar?');
+                    }
             });
         }
     });
